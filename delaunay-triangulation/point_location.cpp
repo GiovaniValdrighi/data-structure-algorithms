@@ -4,16 +4,38 @@
 #include <CGAL/HalfedgeDS_default.h>
 #include <CGAL/HalfedgeDS_vertex_base.h>
 #include <CGAL/HalfedgeDS_decorator.h>
+#include <algorithm>
+#include <random>
 
 typedef CGAL::Simple_cartesian<double> Kernel;
 typedef Kernel::Point_2 Point_2; 
 typedef Kernel::Triangle_2 Triangle_2;
-struct Traits { 
-  typedef Kernel::Point_2 Point_2; 
+
+struct Edge;
+
+struct Vertex{
+  Point_2 point;
+  Edge* incident;
+
+  Vertex(){}
+
+  Vertex(Point_2 new_p){
+    point = new_p;
+  }
 };
-typedef CGAL::HalfedgeDS_default<Traits> HDS;
-typedef CGAL::HalfedgeDS_vertex_base<Traits> Vertex;
-typedef CGAL::HalfedgeDS_decorator<HDS> Decorator;
+
+struct Edge{
+  Edge* twin;
+  Vertex* next;
+
+  Edge(){}
+};
+
+class DCEL{
+  public:
+    std::vector<Vertex*> vertices;
+    std::vector<Edge*> edges;
+};
 
 struct TriangleNode{
   std::vector<TriangleNode*> childs;
@@ -85,17 +107,74 @@ class PointLocation{
     }
 };
 
+class Delaunay{
+  public:
+    std::vector<Point_2> points;
+    DCEL* T;
+    PointLocation* D;
+
+    void insert(Point_2 p){
+      points.push_back(p);
+      return;
+    }
+
+    /**
+     * Compute the point with the highest y-value, and if there is more than one,
+     * the point with highest x-value.
+     * 
+     * @return std::vector<Point_2>::iterator iterator pointing to the point in the vector.
+     */
+    std::vector<Point_2>::iterator  rightmost_highest(){
+      std::vector<Point_2>::iterator it_min = points.begin();
+      std::vector<Point_2>::iterator it = points.begin();
+
+      for(; it != points.end(); ++it){
+        if((*it_min).y() < (*it).y()){
+          it_min = &(*it);
+        }else if((*it_min).y() == (*it).y()){
+          if((*it_min).x() < (*it).x()){
+            it_min = &(*it);
+          }
+        }
+      }
+      return it_min;
+    }
+
+    void run(){
+      //Find the righmost highest point and remove it
+      std::vector<Point_2>::iterator it_p0 = rightmost_highest();
+      Point_2 p0 = *it;
+      points.erase(it_p0);
+
+      //Create root triangle
+
+      //Random order of the remaining points
+      auto rng = std::default_random_engine {};
+      std::shuffle(std::begin(points), std::end(points), rng);
+      std::vector<Point_2>::iterator it = points.begin();
+      for(; it != points.end(); ++it){
+        //find triangle in the point location that contains point
+
+        //create new edges on the DCEL
+
+        //legalize wrong edges
+      }
+      return;
+    }
+};
+
 int main() {
-  PointLocation D;
-  Point_2 p(0.0, 0.0), q(1.1, 1.1), r(1.0, 0);
-  Triangle_2 test_triangle(p, q, r);
-  std::vector<TriangleNode*> triangles_vector;
-  triangles_vector.push_back(new TriangleNode(test_triangle));
-  D.insert(triangles_vector);
-  std::cout << D.root->childs.size() << std::endl;
-  Point_2 m(0.5, 0.2);
-  TriangleNode* result = D.search(D.root, m);
-  std::cout << result->childs.size() << std::endl;
+  std::vector<int> myInts;
+  for(int i = 0; i < 10; i++){
+    myInts.push_back(2 * i);
+  }
+
+  
+
+  for(std::vector<int>::iterator it = myInts.begin(); it != myInts.end(); ++it){
+    std::cout << *it << std::endl;
+  }
+  
   
   return 0;
 }
