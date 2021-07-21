@@ -131,11 +131,11 @@ class DCEL{
    * @brief dd a point inside the triangle that contains the halfedge he,
    * and for each vertex of this triangle, create a new halfedge to the center point.
    * 
-   * @param p Point that will be linked to every other vertex inside this triangle
-   * @param he1 One halfedge that is inside of the triangle
-   * @return std::vector<TriangleNode*> to be appended on the PointLocation leaf
+   * @param p Point that will be linked to every other vertex inside this triangle.
+   * @param he1 One halfedge that is inside of the triangle.
+   * @return std::vector<Halfedge*> pointer to halfedges of the new triangles.
    */
-  std::vector<TriangleNode*>  add_center_point(Point_2 p, Halfedge* he1){
+  std::vector<Halfedge*>  add_center_point(Point_2 p, Halfedge* he1){
     Vertex* v_p = new Vertex(p);
     Halfedge* he2 = he1->next;
     Halfedge* he3 = he2->next;
@@ -148,11 +148,16 @@ class DCEL{
     Halfedge* new_he2 = halfedges_between(v_p, p2);
     Halfedge* new_he3 = halfedges_between(v_p, p3);
 
+    std::cout << "Created edges between." << std::endl;
+
     create_triangle(new_he1, he1, new_he2->twin);
     create_triangle(new_he2, he2, new_he3->twin);
     create_triangle(new_he3, he3, new_he1->twin);
     
-    std::vector<TriangleNode*> childs;
+    std::cout << "Created triangles of edges." << std::endl;
+
+    std::vector<Halfedge*> childs;
+
     childs.push_back(new_he1);
     childs.push_back(new_he2);
     childs.push_back(new_he3);
@@ -329,13 +334,23 @@ class Delaunay{
         //create new edges on the DCEL
         if(leafTriang->t.bounded_side(*it) == CGAL::ON_BOUNDED_SIDE){
           std::cout << "Point inside a triangle." << std::endl;
-          std::vector<TriangleNode*> childs = T.add_center_point(*it, leafTriang->he);
+          std::vector<Halfedge*> new_triangles = T.add_center_point(*it, leafTriang->he);
+          std::vector<TriangleNode*> childs;
+          std::vector<Halfedge*>::iterator it2 = new_triangles.begin();
+          std::cout << "Starting creating TriangleNodes." << std::endl;
+          TriangleNode* cur_child;
+          for(; it2 != new_triangles.end(); it2++){
+            cur_child = new TriangleNode();
+            cur_child->he = *it2;
+            childs.push_back(cur_child);
+          }
           D.insert(leafTriang, childs);
 
         }else if(leafTriang->t.bounded_side(*it) == CGAL::ON_BOUNDARY){
           std::cout << "Point on a boundary of a triangle." << std::endl;
         }
         
+        break;
         
 
         //legalize wrong edges
