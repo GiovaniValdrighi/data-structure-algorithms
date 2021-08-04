@@ -37,13 +37,7 @@ struct Vertex{
    * 
    */
   void print(){
-    if(index == -2){
-      std::cout << " Left p_{-2} vertex ";
-    }else if(index == -1){
-      std::cout << " Right p_{-1} vertex ";
-    }else{
-      std::cout << " (" << p << ")" << " vertex";
-    }
+    std::cout << " p(" << index << ")";
     return;
   }
 
@@ -162,17 +156,41 @@ class DCEL{
   }
 
   /**
-   * @brief Create two halfedges (twins) between vertex p1 and p2,
-   * they will not contain prev e next attributes, only twin and origin.
+   * @brief Print the 3 vertex of the triangle that contain the halfedge.
    * 
-   * @param p1 First vertex of halfedge.
-   * @param p2 Second vertex of halfedge.
+   * @param he halfedge.
+   */
+  void print_triangle(Halfedge *he){
+    std::cout << "T: ";
+    he->origin->print();
+    he->next->origin->print();
+    he->next->next->origin->print();
+    std::cout << std::endl;
+  }
+
+  /**
+   * @brief Add vertex to DCEL.
+   * 
+   * @param v 
+   */
+  void add_vertex(Vertex* v){
+    v->index = vertices.back()->index + 1;
+    vertices.push_back(v);
+    return;
+  }
+
+  /**
+   * @brief Create two halfedges (twins) between vertex v1 and v2,
+   * they will not contain prev and next attributes, only twin and origin.
+   * 
+   * @param v1 First vertex of halfedge.
+   * @param v2 Second vertex of halfedge.
    * @return Halfedge* one of the two created, the other can be acessed by twin attribute.
    */
-  Halfedge* halfedges_between(Vertex* p1, Vertex* p2){
+  Halfedge* halfedges_between(Vertex* v1, Vertex* v2){
     Halfedge* he1 = new Halfedge();
     Halfedge* he2 = new Halfedge();
-    he1->origin = p1;   he2->origin = p2;
+    he1->origin = v1;   he2->origin = v2;
     he1->twin = he2;    he2->twin = he1;
     return he1;
   }
@@ -229,21 +247,14 @@ class DCEL{
     Halfedge* h2 = halfedges_between(v_0, v_minus_1);
     Halfedge* h3 = halfedges_between(v_minus_1, v_minus_2);
 
-    std::cout << "h1 origin: " << h1->origin->index << std::endl;
-    std::cout << "h2 origin: " << h2->origin->index << std::endl;
-    std::cout << "h3 origin: " << h3->origin->index << std::endl;
-
     Halfedge* h1_twin = h1->twin;
     Halfedge* h2_twin = h2->twin;
     Halfedge* h3_twin = h3->twin;
 
     create_triangle(h1, h2, h3);
+    print_triangle(h1);
     create_triangle(h3_twin, h2_twin, h1_twin);
-
-    std::cout << "check if triangle is right:" << std::endl;
-    std::cout << "first next: " << h1->next->origin->index << h2->origin->index << std::endl;
-    std::cout << "second next: " << h1->next->next->origin->index << h3->origin->index << std::endl;
-
+    print_triangle(h1_twin);
 
     h1->tri = tRoot;
     h2->tri = tRoot;
@@ -253,60 +264,52 @@ class DCEL{
     halfedges.push_back(h2);
     halfedges.push_back(h3);
 
-    std::cout << "after some operations" << std::endl;
-    std::cout << "h1 origin: " << h1->origin->index << std::endl;
-    std::cout << "h2 origin: " << h2->origin->index << std::endl;
-    std::cout << "h3 origin: " << h3->origin->index << std::endl;
-
     return h1;
   }
 
   /**
-   * @brief dd a point inside the triangle that contains the halfedge he,
-   * and for each vertex of this triangle, create a new halfedge to the center point.
+   * @brief Add a point inside the triangle that contains the halfedge he,
+   * and for each vertex of this triangle, create a new halfedge to this point.
    * 
-   * @param pr Vertex that will be linked to every other vertex inside this triangle.
+   * @param vr Vertex that will be linked to every other vertex inside this triangle.
    * @param he1 One halfedge that is inside of the triangle.
    * @return std::vector<Halfedge*> pointer to halfedges of the new triangles.
    */
-  std::vector<Halfedge*>  add_center_point(Vertex* pr, Halfedge* he1){
-    pr->index = vertices.back()->index + 1;
-    vertices.push_back(pr);
+  std::vector<Halfedge*>  add_center_point(Vertex* vr, Halfedge* he1){
+    add_vertex(vr);
     Halfedge* he2 = he1->next;
     Halfedge* he3 = he2->next;
 
-    Vertex* p1 = he1->origin;
-    Vertex* p2 = he2->origin;
-    Vertex* p3 = he3->origin;
+    Vertex* v1 = he1->origin;
+    Vertex* v2 = he2->origin;
+    Vertex* v3 = he3->origin;
 
-    std::cout << "p1 index: " << p1->index << std::endl;
-    std::cout << "p2 index: " << p2->index << std::endl;
-    std::cout << "p3 index: " << p3->index << std::endl;
+    std::cout << "Adding center point on ";
+    print_triangle(he1);
 
-    Halfedge* new_he1 = halfedges_between(pr, p1);
-    Halfedge* new_he2 = halfedges_between(pr, p2);
-    Halfedge* new_he3 = halfedges_between(pr, p3);
+    Halfedge* new_he1 = halfedges_between(vr, v1);
+    Halfedge* new_he2 = halfedges_between(vr, v2);
+    Halfedge* new_he3 = halfedges_between(vr, v3);
+    std::cout<< "New 3 triangles created:" << std::endl;
+
+    create_triangle(new_he1, he1, new_he2->twin);
+    print_triangle(new_he1);
+    create_triangle(new_he2, he2, new_he3->twin);
+    print_triangle(new_he2);
+    create_triangle(new_he3, he3, new_he1->twin);
+    print_triangle(new_he3);
 
     halfedges.push_back(new_he1);
     halfedges.push_back(new_he2);
     halfedges.push_back(new_he3);
 
-    std::cout << "Created edges between." << std::endl;
-
-    create_triangle(new_he1, he1, new_he2->twin);
-    create_triangle(new_he2, he2, new_he3->twin);
-    create_triangle(new_he3, he3, new_he1->twin);
-    
-    std::cout << "Created triangles of edges." << std::endl;
-
     std::vector<Halfedge*> newTri_he;
 
     newTri_he.push_back(new_he1);
     newTri_he.push_back(new_he2);
-    newTri_he.push_back(new_he3);
+    newTri_he.push_back(new_he3);   
 
     return newTri_he;
-
   }
 
   /**
@@ -346,7 +349,7 @@ class DCEL{
       int min_ij = pj->index;
       if(pi->index < pj->index) min_ij = pi->index;
 
-      return min_kr < min_ij;
+      return !(min_kr < min_ij);
     }
   }
 
@@ -375,6 +378,10 @@ class DCEL{
     he_jk = he_ij->next;
     he_ki = he_jk->next;
 
+    std::cout << "Old triangles:" << std::endl;
+    print_triangle(he_ij);
+    print_triangle(he_ji);
+
     std::cout << "Created all halfedges pointers." << std::endl;
 
     TriangleNode *tNode1, *tNode2, *tNode1_new, *tNode2_new;
@@ -386,8 +393,13 @@ class DCEL{
     //create two new trainglenodes
     //link the old to the new triangle nodes
     //link the halfedges to the new trianglenodes
+    std::cout << "New triangles:" << std::endl;
+    he_ji->origin = he_rj->origin;
+    he_ij->origin = he_ki->origin;
     create_triangle(he_ji, he_ki, he_ir);
+    print_triangle(he_ji);
     create_triangle(he_ij, he_rj, he_jk);
+    print_triangle(he_ij);
 
     std::cout << "Created new triangles with points." << std::endl; 
 
@@ -422,24 +434,27 @@ class DCEL{
 
 
   void legalize_edge(Vertex* pr, Halfedge* he){
-    std::cout << "Halfedge to be legalized: " << he->origin->index << "->" << he->twin->origin->index << std::endl;
+    std::cout << "Halfedge checking if is legall: ";
+    he->origin->print();
+    std::cout << "-> ";
+    he->twin->origin->print(); 
     Vertex* pi = he->origin;
     Vertex* pj = he->twin->origin;
     Vertex* pk = he->twin->next->next->origin;
-    std::cout << "p_i: ";
-    pi->print();
-    std::cout << " p_j: ";
-    pj->print();
-    std::cout << " p_k: ";
+    std::cout << "with [";
     pk->print();
-    std::cout << std::endl;
+    std::cout << "]";
     if(is_illegal(pi, pj, pr, pk)){
-        std::cout << "Halfedge is illegal." << std::endl;
+        std::cout << "TRUE" << std::endl;
         std::vector<Halfedge*> updated_he = flip(he);
+        print_edges();
         std::vector<Halfedge*>::iterator it = updated_he.begin();
         for(; it != updated_he.end(); it++){
           legalize_edge(pr, *it);
         }
+    }
+    else{
+      std::cout << "FALSE" << std::endl;
     }
   }
 };
@@ -454,6 +469,7 @@ class PointLocation{
      */
     void print(){
       std::cout << std::endl;
+      std::cout << "PointLocation:"  << std::endl;
       root->print();
       if(root->childs.empty()){
         std::cout << "/\\" << std::endl;
