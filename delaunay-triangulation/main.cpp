@@ -84,7 +84,7 @@ struct TriangleNode{
    */
   void print(){
     std::cout << "T: "; 
-    for(int i = 0; i < nodeVertex.size(); i++){
+    for(int i = 0; i < 3; i++){
       nodeVertex[i].print();
     }
     std::cout << " d: " << depth << std::endl;
@@ -534,7 +534,7 @@ class Delaunay{
      * @brief Load points from a file with two coordinates by line separated by space.
      * 
      */
-    void load_file(string filename){
+    void load_file(std::string filename){
       std::ifstream points_file(filename);
       std::string point_line;
       while(getline(points_file, point_line)){
@@ -610,6 +610,6 @@ class Delaunay{
 int main() {
   Delaunay de;
   de.load_file("points.txt");
-  delau.run();
+  de.run();
   return 0;
 }
