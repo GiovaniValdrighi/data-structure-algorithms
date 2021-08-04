@@ -141,6 +141,30 @@ class DCEL{
     }
     std::cout << std::endl;
   }
+
+  /**
+   * @brief Save the triangulation to a file.
+   * 
+   */
+  void save_triangulation(){
+    std::ostream output("output.txt");
+
+    output << "point1;point2;point3" << std::endl;
+    std::vector<Halfedge*>::iterator it = halfedges.begin();
+    for(; it != halfedges.end(); it++){
+      Vertex *v1, *v2, *v3;
+      if((v1->index >= 0) && (v2->index >= 0) & (v3->index>= 0)){
+        Point p1, p2, p3;
+        p1 = v1->p;
+        p2 = v2->p;
+        p3 = v3->p;
+        output << "[" << p1.x() << "," << p1.y() << "];";
+        output << "[" << p2.x() << "," << p2.y() << "];";
+        output << "[" << p3.x() << "," << p3.y() << "]";
+      }
+    }
+    return;
+  }
   
 
   /**
