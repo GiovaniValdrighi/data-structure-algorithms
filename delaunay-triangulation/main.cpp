@@ -1,4 +1,7 @@
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
 #include <vector>
 #include <CGAL/Simple_cartesian.h>
 #include <algorithm>
@@ -46,7 +49,6 @@ struct Vertex{
 
 struct Halfedge{
   Halfedge* twin;
-  Halfedge* prev;
   Halfedge* next;
   Vertex* origin;
   TriangleNode* tri;
@@ -81,37 +83,13 @@ struct TriangleNode{
    * 
    */
   void print(){
-    std::cout << "T: " << nodeVertex[0].index << " ";
-    std::cout << nodeVertex[1].index << " ";
-    std::cout << nodeVertex[2].index; 
+    std::cout << "T: "; 
+    for(int i = 0; i < nodeVertex.size(); i++){
+      nodeVertex[i].print();
+    }
     std::cout << " d: " << depth << std::endl;
   }
 
-  /**
-   * @brief Return true if p is on the right side of the segment from v1 to v2.
-   * 
-   * @param v1 Start vertex of segment.
-   * @param v2 End vertex of segmment.
-   * @param p Point to be tested.
-   * @return true 
-   * @return false 
-   */
-  bool isright(Vertex v1, Vertex v2, Point p){
-    if((v1.index >= 0) & (v2.index >= 0)){
-      return CGAL::right_turn(v1.p, v2.p, p);
-    }else if((v1.index == -1) & (v2.index == -2)){
-      return true;
-    }else if(v1.index == -1){
-      return (v2.p.x() < p.x()) & (v2.p.y() <= p.y());
-    }else if(v2.index == -1){
-      return !((v1.p.x() < p.x()) & (v1.p.y() <= p.y()));
-    }else if(v1.index == -2){
-      return !((v2.p.x() < p.x()) & (v2.p.y() <= p.y()));
-    }else if(v2.index == -2){
-      return (v1.p.x() < p.x()) & (v1.p.y() <= p.y());
-    }
-    return false;
-  }
 
   /**
    * @brief Verify if a point is inside the triangle of the TriangleNode.
@@ -122,18 +100,6 @@ struct TriangleNode{
    */
   bool contains_point(Point p){
     return t.bounded_side(p) == CGAL::ON_BOUNDED_SIDE | t.bounded_side(p) == CGAL::ON_BOUNDARY;
-    /*
-    if((nodeVertex[0].index >= 0) & 
-       (nodeVertex[1].index >= 0) & 
-       (nodeVertex[2].index >= 0)){
-      return t.bounded_side(p) == CGAL::ON_BOUNDED_SIDE;
-    }else{
-      bool isright_1 = isright(nodeVertex[0], nodeVertex[1], p);
-      bool isright_2 = isright(nodeVertex[1], nodeVertex[2], p);
-      bool isright_3 = isright(nodeVertex[2], nodeVertex[0], p);
-      return isright_1 & isright_2 & isright_3;
-    }
-    */
   }
 };
 
@@ -158,6 +124,10 @@ class DCEL{
     std::cout << std::endl;
   }
 
+  /**
+   * @brief Print all halfedges that don't contain helper vertex.
+   * 
+   */
   void print_final_edges(){
     std::cout << std::endl << "DCEL halfedges: " << std::endl;
     std::vector<Halfedge*>::iterator it = halfedges.begin();
@@ -229,16 +199,14 @@ class DCEL{
   }
 
   /**
-   * @brief Create the initial triangle of the structure with
-   * the point p_left and p_right that are points with coordinates 
-   * (-inf, max(points.y)), (inf, min(points.y)) and the rightmost highest
-   * point between points and link all halfedges to a TriangleNode.
+   * @brief Create the initial triangle of the structure with helper points 
+   * that contain all points that will be used and link all created halfedges to a new TriangleNode.
    * 
+   * @param M value for biggest coordinate
    * @param tRoot Pointer to PointLocation TriangleNode
    * @return Halfedge* pointer to be add to PointLocation.
    */
   Halfedge* start_structure(double M, TriangleNode* tRoot){
-    std::cout << "Starting DCEL structure" << std::endl;
     Vertex * v_minus_3 = new Vertex();
     v_minus_3->index = -3;
     v_minus_3->p = Point (-3*M, -3*M);
@@ -252,24 +220,17 @@ class DCEL{
     vertices.push_back(v_minus_3);
     vertices.push_back(v_minus_2);
     vertices.push_back(v_minus_1);
-    //vertices.push_back(v_0);
 
     Halfedge* h1 = halfedges_between(v_minus_3, v_minus_2);
     Halfedge* h2 = halfedges_between(v_minus_2, v_minus_1);
     Halfedge* h3 = halfedges_between(v_minus_1, v_minus_3);
 
-    Halfedge* h1_twin = h1->twin;
-    Halfedge* h2_twin = h2->twin;
-    Halfedge* h3_twin = h3->twin;
-
     create_triangle(h1, h2, h3);
-    print_triangle(h1);
-    create_triangle(h3_twin, h2_twin, h1_twin);
-    print_triangle(h1_twin);
+    create_triangle(h3->twin, h2->twin, h1->twin);
 
-    h1->tri = tRoot;  h1_twin->tri = tRoot;
-    h2->tri = tRoot;  h2_twin->tri = tRoot;
-    h3->tri = tRoot;  h3_twin->tri = tRoot;
+    h1->tri = tRoot;  h1->twin->tri = tRoot;
+    h2->tri = tRoot;  h2->twin->tri = tRoot;
+    h3->tri = tRoot;  h3->twin->tri = tRoot;
 
     halfedges.push_back(h1);   
     halfedges.push_back(h2); 
@@ -295,20 +256,13 @@ class DCEL{
     Vertex* v2 = he2->origin;
     Vertex* v3 = he3->origin;
 
-    std::cout << "Adding center point on ";
-    print_triangle(he1);
-
     Halfedge* new_he1 = halfedges_between(vr, v1);
     Halfedge* new_he2 = halfedges_between(vr, v2);
     Halfedge* new_he3 = halfedges_between(vr, v3);
-    std::cout<< "New 3 triangles created:" << std::endl;
 
     create_triangle(new_he1, he1, new_he2->twin);
-    print_triangle(new_he1);
     create_triangle(new_he2, he2, new_he3->twin);
-    print_triangle(new_he2);
     create_triangle(new_he3, he3, new_he1->twin);
-    print_triangle(new_he3);
 
     halfedges.push_back(new_he1);
     halfedges.push_back(new_he2); 
@@ -342,81 +296,6 @@ class DCEL{
                     (vk->p.y() - origin.y())*(vk->p.y() - origin.y());
       return dist < radium;
     }
-    
-    /*if(
-      (vi->index >= 0) & 
-      (vj->index >= 0) &
-      (vr->index >= 0) &
-      (vk->index >= 0)
-    ){
-      Point origin = CGAL::circumcenter(vi->p, vj->p, vr->p);
-      double radium = (vi->p.x() - origin.x())*(vi->p.x() - origin.x()) + 
-                      (vi->p.y() - origin.y())*(vi->p.y() - origin.y());
-      double dist = (vk->p.x() - origin.x())*(vk->p.x() - origin.x()) + 
-                    (vk->p.y() - origin.y())*(vk->p.y() - origin.y());
-      return dist < radium;
-    }else if(((vi->index < 0) & (vj->index >= 0) & (vk->index >= 0) & (vr->index >= 0)) | 
-            ((vi->index >= 0) & (vj->index < 0) & (vk->index >= 0) & (vr->index >= 0)) | 
-            ((vi->index >= 0) & (vj->index >= 0) & (vk->index < 0) & (vr->index >= 0)) |
-            ((vi->index >= 0) & (vj->index >= 0) & (vk->index >= 0) & (vr->index < 0))){
-      Point origin = CGAL::circumcenter(vi->p, vj->p, vr->p);
-      double radium = (vi->p.x() - origin.x())*(vi->p.x() - origin.x()) + 
-                      (vi->p.y() - origin.y())*(vi->p.y() - origin.y());
-      double dist = (vk->p.x() - origin.x())*(vk->p.x() - origin.x()) + 
-                    (vk->p.y() - origin.y())*(vk->p.y() - origin.y());
-      return dist < radium;
-      /*
-      if((vi->index < 0) | (vj->index < 0)){
-        return true;
-      }else{
-        return false;
-      }
-      
-    }else{
-      Point origin = CGAL::circumcenter(vi->p, vj->p, vr->p);
-      double radium = (vi->p.x() - origin.x())*(vi->p.x() - origin.x()) + 
-                      (vi->p.y() - origin.y())*(vi->p.y() - origin.y());
-      double dist = (vk->p.x() - origin.x())*(vk->p.x() - origin.x()) + 
-                    (vk->p.y() - origin.y())*(vk->p.y() - origin.y());
-      return dist < radium;
-      /*
-      int min_kr = vk->index;
-      if(vr->index < vk->index) min_kr = vr->index;
-
-      int min_ij = vj->index;
-      if(vi->index < vj->index) min_ij = vi->index;
-
-      return !(min_ij < min_kr);
-      
-    }
-    /*if(
-      ((vi->index == -2) & (vj->index == 0)) |
-      ((vi->index == 0) & (vj->index == -1)) |
-      ((vi->index == -1) & (vj->index == -2))
-    ){
-      return false;
-    }else if(
-      (vi->index >= 0) & 
-      (vj->index >= 0) &
-      (vr->index >= 0) &
-      (vk->index >= 0)
-    ){
-      Point origin = CGAL::circumcenter(vi->p, vj->p, vr->p);
-      double radium = (vi->p.x() - origin.x())*(vi->p.x() - origin.x()) + 
-                      (vi->p.y() - origin.y())*(vi->p.y() - origin.y());
-      double dist = (vk->p.x() - origin.x())*(vk->p.x() - origin.x()) + 
-                    (vk->p.y() - origin.y())*(vk->p.y() - origin.y());
-      return dist < radium;
-    }else{
-      int min_kr = vk->index;
-      if(vr->index < vk->index) min_kr = vr->index;
-
-      int min_ij = vj->index;
-      if(vi->index < vj->index) min_ij = vi->index;
-
-      return !(min_kr < min_ij);
-    }
-    */
   }
 
   /**
@@ -444,27 +323,19 @@ class DCEL{
     he_jk = he_ij->next;
     he_ki = he_jk->next;
 
-    std::cout << "Old triangles:" << std::endl;
-    print_triangle(he_ij);
-    print_triangle(he_ji);
-
     TriangleNode *tNode1, *tNode2, *tNode1_new, *tNode2_new;
     tNode1 = he_ji->tri;
     tNode2 = he_ij->tri;
 
-    std::cout << "New triangles:" << std::endl;
     he_ji->origin = he_rj->origin;
     he_ij->origin = he_ki->origin;
     create_triangle(he_ji, he_ki, he_ir);
-    print_triangle(he_ji);
     create_triangle(he_ij, he_rj, he_jk);
-    print_triangle(he_ij);
 
     tNode1_new = new TriangleNode(he_ji);
     tNode2_new = new TriangleNode(he_ij);
 
-    int max_depth = tNode1->depth;
-    if(max_depth < tNode2->depth) max_depth = tNode2->depth;
+    int max_depth = tNode1->depth > tNode2->depth ? tNode1->depth : tNode2->depth;
 
     tNode1_new->depth = max_depth + 1;
     tNode2_new->depth = max_depth + 1;
@@ -473,13 +344,9 @@ class DCEL{
     tNode2->childs.push_back(tNode1_new);
     tNode2->childs.push_back(tNode2_new); 
 
-    he_ji->tri = tNode1_new;
-    he_ki->tri = tNode1_new;
-    he_ir->tri = tNode1_new;
-
-    he_ij->tri = tNode2_new;
-    he_rj->tri = tNode2_new;
-    he_jk->tri = tNode2_new;
+    he_ji->tri = tNode1_new;    he_ij->tri = tNode2_new;
+    he_ki->tri = tNode1_new;    he_rj->tri = tNode2_new;
+    he_ir->tri = tNode1_new;    he_jk->tri = tNode2_new;
 
     std::vector<Halfedge*> updated_he = {he_ki, he_jk};
 
@@ -493,27 +360,15 @@ class DCEL{
    * @param he Halfedge to be checked if is legal.
    */
   void legalize_edge(Vertex* vr, Halfedge* he){
-    std::cout << "Halfedge checking if is legall: ";
-    he->origin->print();
-    std::cout << "->";
-    he->twin->origin->print(); 
     Vertex* vi = he->origin;
     Vertex* vj = he->twin->origin;
     Vertex* vk = he->twin->next->next->origin;
-    std::cout << " with [";
-    vk->print();
-    std::cout << "]:";
     if(is_illegal(vi, vj, vr, vk)){
-        std::cout << "TRUE" << std::endl;
         std::vector<Halfedge*> updated_he = flip(he);
-        print_edges();
         std::vector<Halfedge*>::iterator it = updated_he.begin();
         for(; it != updated_he.end(); it++){
           legalize_edge(vr, *it);
         }
-    }
-    else{
-      std::cout << "FALSE" << std::endl;
     }
   }
 };
@@ -675,34 +530,37 @@ class Delaunay{
       return;
     }
 
-    /**
-     * Compute the point with the highest y-value, and if there is more than one,
-     * the point with highest x-value.
+    /** 
+     * @brief Load points from a file with two coordinates by line separated by space.
      * 
-     * @return std::vector<Point>::iterator iterator pointing to the point in the vector.
      */
-    std::vector<Point>::iterator  rightmost_highest(){
-      std::vector<Point>::iterator it_min = points.begin();
-      std::vector<Point>::iterator it = points.begin();
-
-      for(; it != points.end(); ++it){
-        if((*it_min).y() < (*it).y()){
-          it_min = it;
-        }else if((*it_min).y() == (*it).y()){
-          if((*it_min).x() < (*it).x()){
-            it_min = it;
-          }
-        }
+    void load_file(string filename){
+      std::ifstream points_file(filename);
+      std::string point_line;
+      while(getline(points_file, point_line)){
+        std::stringstream line_stream(point_line);
+        std::string x_s, y_s;
+        double x, y;
+        line_stream >> x_s >> y_s;
+        x = std::stod(x_s);   
+        y = std::stod(y_s);
+        add(Point (x, y));
       }
-      return it_min;
+      points_file.close();
+      return;
     }
 
+    /**
+     * @brief Find the biggest value of the coordinates of points.
+     * 
+     * @return M double with value.
+     */
     double biggest_coordinate(){
       std::vector<Point>::iterator it = points.begin();
-      double M = (*it).x();
+      double M = std::abs((*it).x());
       for(; it != points.end(); ++it){
-        if(M <= (*it).x()) M = (*it).x();
-        if(M <= (*it).y()) M = (*it).y();
+        M = M <= std::abs((*it).x()) ? std::abs((*it).x()) : M;
+        M = M <= std::abs((*it).y()) ? std::abs((*it).y()) : M;
       }
       return M;
     }
@@ -710,56 +568,31 @@ class Delaunay{
     /**
      * @brief Start DCEL and PointLocation structures with the initial point.
      * 
-     * @param p0 initial point.
+     * @param M biggest coordinate.
      */
-    void start_structures(double M){//Point p0){
+    void start_structures(double M){
       TriangleNode* tRoot = D.root;
-      Halfedge* he = T.start_structure(M, tRoot);//p0, tRoot);
+      Halfedge* he = T.start_structure(M, tRoot);
       D.update_root(he);
-      T.print_edges();
-      D.print();
       return;
     }
 
     void run(){
-      //std::vector<Point>::iterator it_p0 = rightmost_highest();
-      //Point p0 = *it_p0;
-      //std::cout << "The rightmost highest point is: " << p0 << std::endl;
-      //points.erase(it_p0);
       double M = biggest_coordinate();
-      std::cout << "M:" << M << std::endl; 
-      start_structures(M);//p0);
+      start_structures(M);
       
       auto rng = std::default_random_engine {};
       std::shuffle(std::begin(points), std::end(points), rng);
       std::vector<Point>::iterator it = points.begin();
 
       for(; it != points.end(); ++it){
-        std::cout << "Searching for the point: " << *it << std::endl;
-        
         TriangleNode* leafTri = D.search(*it);
-        leafTri->print();
       
         Vertex* vr = new Vertex(*it);
         std::vector<Halfedge*> newTri_he;
 
-        if(leafTri == nullptr){
-          std::cout << "Triangle not found." << std::endl;
-          return;
-        }else if(leafTri->t.bounded_side(*it) == CGAL::ON_BOUNDED_SIDE){
-          std::cout << "Inside triangle." << std::endl; 
-          newTri_he = T.add_center_vertex(vr, leafTri->he);
-        }else{
-          std::cout<< "On edge." << std::endl; 
-          //newTri_he = T.add_vertex_on_edge(vr, leafTri->he);
-          return;
-        }
-       
-        T.print_edges();
-
-         
+        newTri_he = T.add_center_vertex(vr, leafTri->he);
         D.add_childs(leafTri, newTri_he);
-        D.print();
 
         std::vector<Halfedge*>::iterator it2 = newTri_he.begin();
         
@@ -775,13 +608,8 @@ class Delaunay{
 };
 
 int main() {
-  Delaunay delau;
-  delau.add(Point (0.5, 0.4));
-  delau.add(Point (1.2, 0.3));
-  delau.add(Point (1, 1.232));
-  delau.add(Point (1.53, 0.71));
-  delau.add(Point (0.94, -0.26));
-  
+  Delaunay de;
+  de.load_file("points.txt");
   delau.run();
   return 0;
 }
