@@ -53,8 +53,11 @@ struct Halfedge{
   Halfedge* next;
   Vertex* origin;
   TriangleNode* tri;
+  bool checked;
 
-  Halfedge(){}
+  Halfedge(){
+    checked = false;
+  }
 };
 
 struct TriangleNode{
@@ -161,29 +164,31 @@ class DCEL{
     }
 
     it = clean_halfedges.begin();
-    std::ofstream output ("images/cat_1000_points.json");
+    std::ofstream output ("images/cat_10000_points.json");
     output << "[" << std::endl;
     for(; it != clean_halfedges.end(); it++){
-      Vertex *v1, *v2, *v3;
-      v1 = (*it)->origin;
-      v2 = (*it)->next->origin;
-      v3 = (*it)->next->next->origin;   
-      output << "{\"points\": [" ;
-      output << "[" << v1->p.x() << "," << v1->p.y() << "],";
-      output << "[" << v2->p.x() << "," << v2->p.y() << "],";
-      output << "[" << v3->p.x() << "," << v3->p.y() << "]";
-      output << "],\"colors\": [";
-      output << "[" << v1->r << "," << v1->g << "," << v1->b << "],";
-      output << "[" << v2->r << "," << v2->g << "," << v2->b << "],";
-      output << "[" << v3->r << "," << v3->g << "," << v3->b << "]";
-      std::vector<Halfedge*>::iterator it_temp = it;
-      it_temp++;
-      if(it_temp != clean_halfedges.end()){
+      if(!(
+        ((*it)->checked) & 
+        ((*it)->next->checked) & 
+        ((*it)->next->next->checked)
+      )){
+        (*it)->checked = true;
+        (*it)->next->checked = true;
+        (*it)->next->next->checked = true;
+        Vertex *v1, *v2, *v3;
+        v1 = (*it)->origin;
+        v2 = (*it)->next->origin;
+        v3 = (*it)->next->next->origin;   
+        output << "{\"points\": [" ;
+        output << "[" << v1->p.x() << "," << v1->p.y() << "],";
+        output << "[" << v2->p.x() << "," << v2->p.y() << "],";
+        output << "[" << v3->p.x() << "," << v3->p.y() << "]";
+        output << "],\"colors\": [";
+        output << "[" << v1->r << "," << v1->g << "," << v1->b << "],";
+        output << "[" << v2->r << "," << v2->g << "," << v2->b << "],";
+        output << "[" << v3->r << "," << v3->g << "," << v3->b << "]";
         output << "]}," << std::endl;
-      }else{
-        output << "]}" << std::endl;
-      }
-       
+      } 
     }
     output << "]" << std::endl;
     output.close();
@@ -680,7 +685,7 @@ class Delaunay{
 
 int main() {
   Delaunay de;
-  de.load_file("images/cat_1000_points.txt");
+  de.load_file("images/cat_10000_points.txt");
   de.run();
   return 0;
 }
