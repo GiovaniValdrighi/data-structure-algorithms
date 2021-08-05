@@ -165,7 +165,14 @@ class DCEL{
         output << "[" << v1->r << "," << v1->g << "," << v1->b << "],";
         output << "[" << v2->r << "," << v2->g << "," << v2->b << "],";
         output << "[" << v3->r << "," << v3->g << "," << v3->b << "]";
-        output << "]}," << std::endl;
+        std::vector<Halfedge*>::iterator it_temp = it;
+        it_temp++;
+        if(it_temp != halfedges.end()){
+          output << "]}," << std::endl;
+        }else{
+          output << "]}" << std::endl;
+        }
+       
       }
     }
     output << "]" << std::endl;
@@ -578,8 +585,8 @@ class Delaunay{
         std::string x_s, y_s, r_s, g_s, b_s;
         double x, y, r, g, b;
         line_stream >> x_s >> y_s >> r_s >> g_s >> b_s;
-        x = std::stod(x_s);   
-        y = std::stod(y_s);
+        x = std::stod(x_s) + 1/(std::rand() % 10000);   
+        y = std::stod(y_s) + 1/(std::rand() % 10000);
         r = std::stod(r_s);
         g = std::stod(g_s);
         b = std::stod(b_s);
