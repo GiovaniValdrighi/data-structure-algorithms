@@ -16,7 +16,7 @@ struct Halfedge; struct TriangleNode;
 struct Vertex{
   Point p;
   Halfedge* he;
-  int index;
+  int index, r, g, b;
 
   Vertex(){}
 
@@ -147,9 +147,9 @@ class DCEL{
    * 
    */
   void save_triangulation(){
-    std::ofstream output ("output.txt");
+    std::ofstream output ("output.json");
 
-    output << "point1;point2;point3" << std::endl;
+    output << "[" << std::endl;
     std::vector<Halfedge*>::iterator it = halfedges.begin();
     for(; it != halfedges.end(); it++){
       Vertex *v1, *v2, *v3;
@@ -157,15 +157,18 @@ class DCEL{
       v2 = (*it)->next->origin;
       v3 = (*it)->next->next->origin;
       if((v1->index >= 0) && (v2->index >= 0) & (v3->index>= 0)){
-        Point p1, p2, p3;
-        p1 = v1->p;
-        p2 = v2->p;
-        p3 = v3->p;
-        output << "[" << p1.x() << "," << p1.y() << "];";
-        output << "[" << p2.x() << "," << p2.y() << "];";
-        output << "[" << p3.x() << "," << p3.y() << "]" << std::endl;
+        output << "{\"points\": [" ;
+        output << "[" << v1->p.x() << "," << v1->p.y() << "],";
+        output << "[" << v2->p.x() << "," << v2->p.y() << "],";
+        output << "[" << v3->p.x() << "," << v3->p.y() << "]";
+        output << "],\"colors\": [";
+        output << "[" << v1->r << "," << v1->g << "," << v1->b << "],";
+        output << "[" << v2->r << "," << v2->g << "," << v2->b << "],";
+        output << "[" << v3->r << "," << v3->g << "," << v3->b << "]";
+        output << "]}," << std::endl;
       }
     }
+    output << "]" << std::endl;
     output.close();
     return;
   }
@@ -192,6 +195,13 @@ class DCEL{
   void add_vertex(Vertex* v){
     v->index = vertices.back()->index + 1;
     vertices.push_back(v);
+    return;
+  }
+
+  void set_vertex_color(Vertex* v, int r, int g, int b){
+    v->r = r;
+    v->g = g;
+    v->b = b;
     return;
   }
 
@@ -237,12 +247,15 @@ class DCEL{
   Halfedge* start_structure(double M, TriangleNode* tRoot){
     Vertex * v_minus_3 = new Vertex();
     v_minus_3->index = -3;
+    set_vertex_color(v_minus_3, 0, 0, 0);
     v_minus_3->p = Point (-3*M, -3*M);
     Vertex* v_minus_2 = new Vertex();
     v_minus_2->index = -2;
+    set_vertex_color(v_minus_2, 0, 0, 0);
     v_minus_2->p = Point (0, 3*M);
     Vertex* v_minus_1 = new Vertex();
     v_minus_1->index = -1;
+    set_vertex_color(v_minus_1, 0, 0, 0);
     v_minus_1->p = Point (3*M, 0);
 
     vertices.push_back(v_minus_3);
@@ -549,14 +562,9 @@ class PointLocation{
 class Delaunay{
   public:
     std::vector<Point> points;
+    std::vector<int> r_v, g_v, b_v;
     DCEL T;
     PointLocation D;
-
-    void add(Point p){
-      points.push_back(p);
-      std::cout << "Add point, vector length:" << points.size() << std::endl;
-      return;
-    }
 
     /** 
      * @brief Load points from a file with two coordinates by line separated by space.
@@ -567,12 +575,18 @@ class Delaunay{
       std::string point_line;
       while(getline(points_file, point_line)){
         std::stringstream line_stream(point_line);
-        std::string x_s, y_s;
-        double x, y;
-        line_stream >> x_s >> y_s;
+        std::string x_s, y_s, r_s, g_s, b_s;
+        double x, y, r, g, b;
+        line_stream >> x_s >> y_s >> r_s >> g_s >> b_s;
         x = std::stod(x_s);   
         y = std::stod(y_s);
-        add(Point (x, y));
+        r = std::stod(r_s);
+        g = std::stod(g_s);
+        b = std::stod(b_s);
+        points.push_back(Point (x, y));
+        r_v.push_back(r);
+        g_v.push_back(g);
+        b_v.push_back(b);
       }
       points_file.close();
       return;
@@ -612,11 +626,17 @@ class Delaunay{
       auto rng = std::default_random_engine {};
       std::shuffle(std::begin(points), std::end(points), rng);
       std::vector<Point>::iterator it = points.begin();
+      std::vector<Point>::iterator it_r = r_v.begin();
+      std::vector<Point>::iterator it_g = g_v.begin();
+      std::vector<Point>::iterator it_b = b_v.begin();
 
       for(; it != points.end(); ++it){
         TriangleNode* leafTri = D.search(*it);
       
         Vertex* vr = new Vertex(*it);
+        vr->r = (*it_r);
+        vr->g = (*it_g);
+        vr->b = (*it_b);
         std::vector<Halfedge*> newTri_he;
 
         newTri_he = T.add_center_vertex(vr, leafTri->he);
@@ -627,7 +647,7 @@ class Delaunay{
         for(; it2 != newTri_he.end(); it2++){
           T.legalize_edge(vr, (*it2)->next);
         }
-        
+        it_r++; it_g++; it_b++;        
       }
 
       T.print_final_edges();
