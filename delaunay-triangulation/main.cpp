@@ -6,6 +6,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <algorithm>
 #include <random>
+#include <iomanip>
 
 typedef CGAL::Simple_cartesian<double> Kernel;
 typedef Kernel::Point_2 Point; 
@@ -147,9 +148,7 @@ class DCEL{
    * 
    */
   void save_triangulation(){
-    std::ofstream output ("output.json");
-
-    output << "[" << std::endl;
+    std::vector<Halfedge*> clean_halfedges;
     std::vector<Halfedge*>::iterator it = halfedges.begin();
     for(; it != halfedges.end(); it++){
       Vertex *v1, *v2, *v3;
@@ -157,23 +156,34 @@ class DCEL{
       v2 = (*it)->next->origin;
       v3 = (*it)->next->next->origin;
       if((v1->index >= 0) && (v2->index >= 0) & (v3->index>= 0)){
-        output << "{\"points\": [" ;
-        output << "[" << v1->p.x() << "," << v1->p.y() << "],";
-        output << "[" << v2->p.x() << "," << v2->p.y() << "],";
-        output << "[" << v3->p.x() << "," << v3->p.y() << "]";
-        output << "],\"colors\": [";
-        output << "[" << v1->r << "," << v1->g << "," << v1->b << "],";
-        output << "[" << v2->r << "," << v2->g << "," << v2->b << "],";
-        output << "[" << v3->r << "," << v3->g << "," << v3->b << "]";
-        std::vector<Halfedge*>::iterator it_temp = it;
-        it_temp++;
-        if(it_temp != halfedges.end()){
-          output << "]}," << std::endl;
-        }else{
-          output << "]}" << std::endl;
-        }
-       
+        clean_halfedges.push_back(*it);
       }
+    }
+
+    it = clean_halfedges.begin();
+    std::ofstream output ("images/cat_1000_points.json");
+    output << "[" << std::endl;
+    for(; it != clean_halfedges.end(); it++){
+      Vertex *v1, *v2, *v3;
+      v1 = (*it)->origin;
+      v2 = (*it)->next->origin;
+      v3 = (*it)->next->next->origin;   
+      output << "{\"points\": [" ;
+      output << "[" << v1->p.x() << "," << v1->p.y() << "],";
+      output << "[" << v2->p.x() << "," << v2->p.y() << "],";
+      output << "[" << v3->p.x() << "," << v3->p.y() << "]";
+      output << "],\"colors\": [";
+      output << "[" << v1->r << "," << v1->g << "," << v1->b << "],";
+      output << "[" << v2->r << "," << v2->g << "," << v2->b << "],";
+      output << "[" << v3->r << "," << v3->g << "," << v3->b << "]";
+      std::vector<Halfedge*>::iterator it_temp = it;
+      it_temp++;
+      if(it_temp != clean_halfedges.end()){
+        output << "]}," << std::endl;
+      }else{
+        output << "]}" << std::endl;
+      }
+       
     }
     output << "]" << std::endl;
     output.close();
@@ -583,10 +593,12 @@ class Delaunay{
       while(getline(points_file, point_line)){
         std::stringstream line_stream(point_line);
         std::string x_s, y_s, r_s, g_s, b_s;
-        double x, y, r, g, b;
+        double x, y, float_x, float_y, r, g, b;
         line_stream >> x_s >> y_s >> r_s >> g_s >> b_s;
-        x = std::stod(x_s) + 1/(std::rand() % 10000);   
-        y = std::stod(y_s) + 1/(std::rand() % 10000);
+        float_x = (std::rand() % 1000);
+        float_y = (std::rand() % 1000);
+        x = std::stod(x_s) + 1/(float_x + 1);   
+        y = std::stod(y_s) + 1/(float_y + 1);
         r = std::stod(r_s);
         g = std::stod(g_s);
         b = std::stod(b_s);
@@ -637,9 +649,9 @@ class Delaunay{
       std::vector<int>::iterator it_g = g_v.begin();
       std::vector<int>::iterator it_b = b_v.begin();
 
+      int counter = 0;
       for(; it != points.end(); ++it){
         TriangleNode* leafTri = D.search(*it);
-      
         Vertex* vr = new Vertex(*it);
         vr->r = (*it_r);
         vr->g = (*it_g);
@@ -654,10 +666,13 @@ class Delaunay{
         for(; it2 != newTri_he.end(); it2++){
           T.legalize_edge(vr, (*it2)->next);
         }
-        it_r++; it_g++; it_b++;        
+        it_r++; it_g++; it_b++; counter++;
+        if((counter % 20) == 0){
+          std::cout << "On iteration " << counter << "." << std::endl;
+        }      
       }
 
-      T.print_final_edges();
+      //T.print_final_edges();
       T.save_triangulation();
       return;
     }
@@ -665,7 +680,7 @@ class Delaunay{
 
 int main() {
   Delaunay de;
-  de.load_file("images/cat_100_points.txt");
+  de.load_file("images/cat_1000_points.txt");
   de.run();
   return 0;
 }
