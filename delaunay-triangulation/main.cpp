@@ -150,7 +150,7 @@ class DCEL{
    * @brief Save the triangulation to a file.
    * 
    */
-  void save_triangulation(){
+  void save_triangulation(std::string name){
     std::vector<Halfedge*> clean_halfedges;
     std::vector<Halfedge*>::iterator it = halfedges.begin();
     for(; it != halfedges.end(); it++){
@@ -158,13 +158,23 @@ class DCEL{
       v1 = (*it)->origin;
       v2 = (*it)->next->origin;
       v3 = (*it)->next->next->origin;
-      if((v1->index >= 0) && (v2->index >= 0) & (v3->index>= 0)){
+      if((v1->index >= 0) & (v2->index >= 0) & (v3->index>= 0)){
         clean_halfedges.push_back(*it);
       }
+
+      Vertex *v1_t, *v2_t, *v3_t;
+      v1_t = (*it)->twin->origin;
+      v2_t = (*it)->twin->next->origin;
+      v3_t = (*it)->twin->next->next->origin;
+      if((v1_t->index >= 0) & (v2_t->index >= 0) & (v3_t->index>= 0)){
+        clean_halfedges.push_back((*it)->twin);
+      }
+
+
     }
 
     it = clean_halfedges.begin();
-    std::ofstream output ("images/cat_10000_points.json");
+    std::ofstream output (name + ".json");
     output << "[" << std::endl;
     for(; it != clean_halfedges.end(); it++){
       if(!(
@@ -190,7 +200,7 @@ class DCEL{
         output << "]}," << std::endl;
       } 
     }
-    output << "]" << std::endl;
+    output << "{\"points\": [[0, 0], [0, 0], [0, 0]], \"colors\" : [[0, 0, 0], [0, 0, 0], [0, 0, 0]]}]" << std::endl;
     output.close();
     return;
   }
@@ -493,7 +503,20 @@ class PointLocation{
                            root->nodeVertex[2].p);
       return;
     }
-
+    
+    void search(TriangleNode**& tNode, Point p){
+      tNode = &root;
+      while(!((*tNode)->childs.empty())){
+        std::vector<TriangleNode*>::iterator it = (*tNode)->childs.begin();
+        for(; it != (*tNode)->childs.end(); it++){
+          if((*it)->contains_point(p)){
+            tNode = &(*it);
+            break;
+          }
+        }
+      }
+      return;
+    }
     /**
      * Search for triangle node that contain point and returns it,
      * if there isn't a triangle that contains, return a null pointer.
@@ -501,7 +524,7 @@ class PointLocation{
      * @param tNode TriangleNode to search childs.
      * @param p Point to seach.
      * @return Pointer to TriangleNode or null pointer.
-     */
+     
     TriangleNode* search(TriangleNode* tNode, Point p){
       if(tNode->childs.empty()){
         if(tNode->contains_point(p)){
@@ -510,6 +533,8 @@ class PointLocation{
           return nullptr;
         }
       }
+
+    
       
       std::vector<TriangleNode*>::iterator it = tNode->childs.begin();
       for (; it != tNode->childs.end(); ++it){
@@ -526,10 +551,11 @@ class PointLocation{
      *
      * @param p Point to seach.
      * @return Pointer to TriangleNode or null pointer.
-     */
+     
     TriangleNode* search(Point p){
       return search(root, p);
-    }    
+    }
+    */    
 
     /**
      *  Append childs to a TriangleNode.
@@ -587,12 +613,15 @@ class Delaunay{
     std::vector<int> r_v, g_v, b_v;
     DCEL T;
     PointLocation D;
+    std::string name;
 
     /** 
      * @brief Load points from a file with two coordinates by line separated by space.
      * 
      */
     void load_file(std::string filename){
+      size_t lastindex = filename.find_last_of("."); 
+      name = filename.substr(0, lastindex); 
       std::ifstream points_file(filename);
       std::string point_line;
       while(getline(points_file, point_line)){
@@ -656,15 +685,16 @@ class Delaunay{
 
       int counter = 0;
       for(; it != points.end(); ++it){
-        TriangleNode* leafTri = D.search(*it);
+        TriangleNode** leafTri;
+        D.search(leafTri, *it);
         Vertex* vr = new Vertex(*it);
         vr->r = (*it_r);
         vr->g = (*it_g);
         vr->b = (*it_b);
         std::vector<Halfedge*> newTri_he;
 
-        newTri_he = T.add_center_vertex(vr, leafTri->he);
-        D.add_childs(leafTri, newTri_he);
+        newTri_he = T.add_center_vertex(vr, (*leafTri)->he);
+        D.add_childs((*leafTri), newTri_he);
 
         std::vector<Halfedge*>::iterator it2 = newTri_he.begin();
         
@@ -677,15 +707,16 @@ class Delaunay{
         }      
       }
 
+      //T.print_edges();
       //T.print_final_edges();
-      T.save_triangulation();
+      T.save_triangulation(name);
       return;
     }
 };
 
-int main() {
+int main(int argc, char* argv[]) {
   Delaunay de;
-  de.load_file("images/cat_10000_points.txt");
+  de.load_file(argv[1]);
   de.run();
   return 0;
 }
