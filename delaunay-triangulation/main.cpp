@@ -626,9 +626,9 @@ class Delaunay{
       auto rng = std::default_random_engine {};
       std::shuffle(std::begin(points), std::end(points), rng);
       std::vector<Point>::iterator it = points.begin();
-      std::vector<Point>::iterator it_r = r_v.begin();
-      std::vector<Point>::iterator it_g = g_v.begin();
-      std::vector<Point>::iterator it_b = b_v.begin();
+      std::vector<int>::iterator it_r = r_v.begin();
+      std::vector<int>::iterator it_g = g_v.begin();
+      std::vector<int>::iterator it_b = b_v.begin();
 
       for(; it != points.end(); ++it){
         TriangleNode* leafTri = D.search(*it);
@@ -658,7 +658,7 @@ class Delaunay{
 
 int main() {
   Delaunay de;
-  de.load_file("points.txt");
+  de.load_file("images/cat_100_points.txt");
   de.run();
   return 0;
 }
