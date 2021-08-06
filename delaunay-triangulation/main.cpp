@@ -626,8 +626,17 @@ class Delaunay{
       double M = biggest_coordinate();
       start_structures(M);
       
-      auto rng = std::default_random_engine {};
-      std::shuffle(std::begin(points), std::end(points), rng);
+      std::random_device r;
+      std::seed_seq seed{r(), r(), r(), r(), r(), r(), r()};
+
+      std::mt19937 eng1(seed);
+      auto engr = eng1;
+      auto engg = eng1;
+      auto engb = eng1;
+      std::shuffle(std::begin(points), std::end(points), eng1);
+      std::shuffle(std::begin(r_v), std::end(r_v), engr);
+      std::shuffle(std::begin(g_v), std::end(g_v), engg);
+      std::shuffle(std::begin(b_v), std::end(b_v), engb);
       std::vector<Point>::iterator it = points.begin();
       std::vector<int>::iterator it_r = r_v.begin();
       std::vector<int>::iterator it_g = g_v.begin();
