@@ -230,6 +230,14 @@ class DCEL{
     return;
   }
 
+  /**
+   * @brief Add color to vertex.
+   * 
+   * @param v 
+   * @param r red int 
+   * @param g green int 
+   * @param b blue int 
+   */
   void set_vertex_color(Vertex* v, int r, int g, int b){
     v->r = r;
     v->g = g;
@@ -504,6 +512,14 @@ class PointLocation{
       return;
     }
     
+    /**
+     * Search for triangle node that contain point and returns it,
+     * if there isn't a triangle that contains, return a null pointer.
+     *
+     * @param tNode TriangleNode to search childs.
+     * @param p Point to seach.
+     * @return Pointer to TriangleNode
+     */ 
     void search(TriangleNode**& tNode, Point p){
       tNode = &root;
       while(!((*tNode)->childs.empty())){
@@ -514,72 +530,6 @@ class PointLocation{
             break;
           }
         }
-      }
-      return;
-    }
-    /**
-     * Search for triangle node that contain point and returns it,
-     * if there isn't a triangle that contains, return a null pointer.
-     *
-     * @param tNode TriangleNode to search childs.
-     * @param p Point to seach.
-     * @return Pointer to TriangleNode or null pointer.
-     
-    TriangleNode* search(TriangleNode* tNode, Point p){
-      if(tNode->childs.empty()){
-        if(tNode->contains_point(p)){
-          return tNode;
-        }else{
-          return nullptr;
-        }
-      }
-
-    
-      
-      std::vector<TriangleNode*>::iterator it = tNode->childs.begin();
-      for (; it != tNode->childs.end(); ++it){
-        if((*it)->contains_point(p)){
-            return search(*it, p);
-        }
-      }
-      return nullptr;
-    }
-
-    /**
-     * Search for triangle node that contain point and returns it,
-     * if there isn't a triangle that contains, return a null pointer.
-     *
-     * @param p Point to seach.
-     * @return Pointer to TriangleNode or null pointer.
-     
-    TriangleNode* search(Point p){
-      return search(root, p);
-    }
-    */    
-
-    /**
-     *  Append childs to a TriangleNode.
-     * 
-     * @param tNode TriangleNode that will recieve childs.
-     * @param childtNodes Vector of TriangleNodes* that are the new childs.
-     */
-    void insert(TriangleNode* tNode, std::vector<TriangleNode*> childtNodes){
-      std::vector<TriangleNode*>::iterator it = childtNodes.begin();
-      for (; it != childtNodes.end(); ++it){
-        tNode->childs.push_back(&**it);
-      }
-      return;
-    }
-
-    /**
-     * Append childs to the root node.
-     * 
-     * @param childtNodes Vector of TriangleNodes* that are the new childs.
-     */
-    void insert(std::vector<TriangleNode*> childtNodes){
-      std::vector<TriangleNode*>::iterator it = childtNodes.begin();
-      for (; it != childtNodes.end(); ++it){
-        root->childs.push_back(&**it);
       }
       return;
     }
