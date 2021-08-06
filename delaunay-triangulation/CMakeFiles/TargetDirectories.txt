@@ -1,3 +1,0 @@
-/home/giovani/Área de Trabalho/code/data-structure-algorithms/delaunay-triangulation/CMakeFiles/rebuild_cache.dir
-/home/giovani/Área de Trabalho/code/data-structure-algorithms/delaunay-triangulation/CMakeFiles/edit_cache.dir
-/home/giovani/Área de Trabalho/code/data-structure-algorithms/delaunay-triangulation/CMakeFiles/main.dir

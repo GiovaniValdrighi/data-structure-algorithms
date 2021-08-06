@@ -7,6 +7,7 @@
 
 <body>
     <div id="content">
+        <div id = "menu"><a href="index.html">Home</a> | <a href="delaunay.html">Delaunay</a> </div>
         <h1>Delaunay Triangulation</h1>
         <p>Application of a delaunay triangulation implemented for the discipline
             of data structure and algorithms at EMAp Master taught by Jorge Poco. An implementation of the algorithm
@@ -14,25 +15,27 @@
             not)
             were selected and with the triangulation, each triangle will be coloured by the mean color of it's vertex.
         </p>
-        <p>The variations of the result are a picture of a cat or a face, random points or points from an edge,
-            and number of points in (100, 1000, 10000).
+        <p>The variations of the result can be selected below, there are two different pictures, the points were selected at random 
+            in the full image or at random in the edges of the images, the number of points can be selected, with a high number 
+            more details of the image are visualized and the colouring of triangles can be by the mean color of the vertex or 
+            by a interpolation to generate a gradient.
         </p>
         <form name="f1">
-            <p>Picture</p>
+            Picture
               <input type="radio" id="cat" name="picture" value="cat" checked="true" onclick="update()">
               <label for="cat">cat</label>
               <input type="radio" id="face" name="picture" value="face" onclick="update()">
               <label for="face">face</label><br>
         </form>
         <form name="f2">
-            <p>Points</p>
+            Points
               <input type="radio" id="random" name="points" value="random" checked="true" onclick="update()">
               <label for="random">random</label>
               <input type="radio" id="edge" name="points" value="edge" onclick="update()">
               <label for="edge">edge</label><br>
         </form>
         <form name="f3">
-            <p>Number of points</p>
+            Number of points
               <input type="radio" id="100" name="n_points" value="100" checked="true" onclick="update()">
               <label for="100">100</label>
             <input type="radio" id="1000" name="n_points" value="1000" onclick="update()">
@@ -41,7 +44,7 @@
               <label for="10000">10000</label>
         </form>
         <form name="f4">
-            <p>Color</p>
+            Color
             <input type="radio" id="mean" name="color" value="mean" checked="true" onclick="update()">
              <label for="mean">mean</label>
              <input type="radio" id="gradient" name="color" value="gradient" onclick="update()">
