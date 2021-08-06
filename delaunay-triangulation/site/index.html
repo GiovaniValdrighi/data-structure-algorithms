@@ -1,0 +1,67 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <title>Delaunay Triangulation</title>
+</head>
+
+<body>
+    <div id="content">
+        <h1>Delaunay Triangulation</h1>
+        <p>Application of a delaunay triangulation implemented for the discipline
+            of data structure and algorithms at EMAp Master taught by Jorge Poco. An implementation of the algorithm
+            was implemented with C++, to demonstrate the result, random points from an image (that can be from a edge or
+            not)
+            were selected and with the triangulation, each triangle will be coloured by the mean color of it's vertex.
+        </p>
+        <p>The variations of the result are a picture of a cat or a face, random points or points from an edge,
+            and number of points in (100, 1000, 10000).
+        </p>
+        <form name="f1">
+            <p>Picture</p>
+              <input type="radio" id="cat" name="picture" value="cat" checked="true" onclick="update()">
+              <label for="cat">cat</label>
+              <input type="radio" id="face" name="picture" value="face" onclick="update()">
+              <label for="face">face</label><br>
+        </form>
+        <form name="f2">
+            <p>Points</p>
+              <input type="radio" id="random" name="points" value="random" checked="true" onclick="update()">
+              <label for="random">random</label>
+              <input type="radio" id="edge" name="points" value="edge" onclick="update()">
+              <label for="edge">edge</label><br>
+        </form>
+        <form name="f3">
+            <p>Number of points</p>
+              <input type="radio" id="100" name="n_points" value="100" checked="true" onclick="update()">
+              <label for="100">100</label>
+            <input type="radio" id="1000" name="n_points" value="1000" onclick="update()">
+              <label for="1000">1000</label>
+            <input type="radio" id="10000" name="n_points" value="10000" onclick="update()">
+              <label for="10000">10000</label>
+        </form>
+        <form name="f4">
+            <p>Color</p>
+            <input type="radio" id="mean" name="color" value="mean" checked="true" onclick="update()">
+             <label for="mean">mean</label>
+             <input type="radio" id="gradient" name="color" value="gradient" onclick="update()">
+             <label for="gradient">gradient</label>
+        </form>
+        <!--------------------------
+        <form name="f5">
+            <p>Triangulation</p>
+            <input type="radio" name="triangulation" value="complete" checked="true" onclick="update()">
+             <label >complete</label>
+             <input type="radio"  name="triangulation" value="holes" onclick="update()">
+             <label >holes</label>
+        </form>
+        -------------------------------------->
+        <div id="plot"></div>
+
+
+    </div>
+    <script src="https://www.unpkg.com/regl@1.3.13/dist/regl.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
