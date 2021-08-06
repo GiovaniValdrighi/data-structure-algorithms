@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <random>
 #include <iomanip>
+#include <chrono>
+
 
 typedef CGAL::Simple_cartesian<double> Kernel;
 typedef Kernel::Point_2 Point; 
@@ -674,8 +676,13 @@ class Delaunay{
 };
 
 int main(int argc, char* argv[]) {
+
+  auto t1 = std::chrono::high_resolution_clock::now();
   Delaunay de;
   de.load_file(argv[1]);
   de.run();
+  auto t2 = std::chrono::high_resolution_clock::now();
+  auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+  std::cout << "Processing time:" << ms_int.count() << "ms\n";
   return 0;
 }
