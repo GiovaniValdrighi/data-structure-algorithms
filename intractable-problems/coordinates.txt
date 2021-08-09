@@ -1,0 +1,161 @@
+Aracajú - SE
+
+10º 54' 40" S
+
+037º 04' 18" O
+
+Belém - PA
+
+01º 27' 21" S
+
+048º 30' 16" O
+
+Belo Horizonte - MG
+
+19º 55' 15" S
+
+043º 56' 16" O
+
+Boa Vista - RR
+
+02º 49' 11" N
+
+060º 40' 24" O
+
+Brasília - DF
+
+15º 46' 47" S
+
+047º 55' 47" O
+
+Campo Grande - MS
+
+20º 26' 34" S
+
+054º 38' 47" O
+
+Cuiabá - MT
+
+15º 35' 46" S
+
+056º 05' 48" O
+
+Curitiba - PR
+
+25º 25' 40" S
+
+049º 16' 23" O
+
+Florianópolis - SC
+
+27º 35' 48" S
+
+048º 32' 57" O
+
+Fortaleza - CE
+
+03º 43' 02" S
+
+038º 32' 35" O
+
+Goiânia - GO
+
+16º 40' 43" S
+
+049º 15' 14" O
+
+João Pessoa - PB
+
+07º 06' 54" S
+
+034º 51' 47" O
+
+Macapá - AP
+
+00º 02' 20" N
+
+051º 03' 59" O
+
+Maceió - AL
+
+09º 39' 57" S
+
+035º 44' 07" O
+
+Manaus - AM
+
+03º 06' 07" S
+
+060º 01' 30" O
+
+Natal - RN
+
+05º 47' 42" S
+
+035º 12' 34" O
+
+Palmas - TO
+
+10º 12' 46" S
+
+048º 21' 37" O
+
+Porto Alegre - RS
+
+30º 01' 59" S
+
+051º 13' 48" O
+
+Porto Velho - RO
+
+08º 45' 43" S
+
+063º 54' 14" O
+
+Recife - PE
+
+08º 03' 14" S
+
+034º 52' 52" O
+
+Rio Branco - AC
+
+09º 58' 29" S
+
+067º 48' 36" O
+
+Rio de Janeiro - RJ
+
+22º 54' 10" S
+
+043º 12' 27" O
+
+Salvador - BA
+
+12º 58' 16" S
+
+038º 30' 39" O
+
+São Luis - MA
+
+02º 31' 47" S
+
+044º 18' 10" O
+
+São Paulo - SP
+
+23º 32' 51" S
+
+046º 38' 10" O
+
+Teresina - PI
+
+05º 05' 21" S
+
+042º 48' 07" O
+
+Vitória - ES
+
+20º 19' 10" S
+
+040º 20' 16" O
